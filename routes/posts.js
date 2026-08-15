@@ -1,41 +1,94 @@
 const express = require('express');
 const router = express.Router();
 
-// GET /posts - Scaffold for post listing
+// In-memory data store for blog posts
+let blogPosts = [];
+let nextId = 1;
+
+// GET /posts - Retrieve all posts
 router.get('/', (req, res) => {
-  res.status(200).json({
-    message: 'GET /posts route active'
-  });
+  res.status(200).json(blogPosts);
 });
 
-// GET /posts/:id - Scaffold for single post retrieval
+// GET /posts/:id - Retrieve a single post by ID
 router.get('/:id', (req, res) => {
-  res.status(200).json({
-    message: 'GET /posts/:id route active',
-    id: req.params.id
-  });
+  const id = parseInt(req.params.id, 10);
+  const post = blogPosts.find((p) => p.id === id);
+
+  if (!post) {
+    return res.status(404).json({
+      message: 'Post not found'
+    });
+  }
+
+  res.status(200).json(post);
 });
 
-// POST /posts - Scaffold for post creation
+// POST /posts - Create a new post
 router.post('/', (req, res) => {
-  res.status(201).json({
-    message: 'POST /posts route active'
-  });
+  const { title, body } = req.body;
+
+  // Validation: both title and body are required non-empty strings
+  if (!title || typeof title !== 'string' || !title.trim() || !body || typeof body !== 'string' || !body.trim()) {
+    return res.status(400).json({
+      message: 'Title and body are required.'
+    });
+  }
+
+  const newPost = {
+    id: nextId++,
+    title: title.trim(),
+    body: body.trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  blogPosts.push(newPost);
+  res.status(201).json(newPost);
 });
 
-// PUT /posts/:id - Scaffold for post update
+// PUT /posts/:id - Update an existing post by ID
 router.put('/:id', (req, res) => {
-  res.status(200).json({
-    message: 'PUT /posts/:id route active',
-    id: req.params.id
-  });
+  const id = parseInt(req.params.id, 10);
+  const postIndex = blogPosts.findIndex((p) => p.id === id);
+
+  if (postIndex === -1) {
+    return res.status(404).json({
+      message: 'Post not found'
+    });
+  }
+
+  const { title, body } = req.body;
+
+  // Validation: both title and body are required non-empty strings
+  if (!title || typeof title !== 'string' || !title.trim() || !body || typeof body !== 'string' || !body.trim()) {
+    return res.status(400).json({
+      message: 'Title and body are required.'
+    });
+  }
+
+  blogPosts[postIndex] = {
+    ...blogPosts[postIndex],
+    title: title.trim(),
+    body: body.trim()
+  };
+
+  res.status(200).json(blogPosts[postIndex]);
 });
 
-// DELETE /posts/:id - Scaffold for post deletion
+// DELETE /posts/:id - Delete a post by ID
 router.delete('/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const postIndex = blogPosts.findIndex((p) => p.id === id);
+
+  if (postIndex === -1) {
+    return res.status(404).json({
+      message: 'Post not found'
+    });
+  }
+
+  blogPosts.splice(postIndex, 1);
   res.status(200).json({
-    message: 'DELETE /posts/:id route active',
-    id: req.params.id
+    message: 'Post deleted successfully'
   });
 });
 
