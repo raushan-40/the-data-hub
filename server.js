@@ -2,7 +2,8 @@ const express = require('express');
 const postsRouter = require('./routes/posts');
 
 const app = express();
-const PORT = 5000;
+// Support hosting provider PORT while defaulting to 5000 locally
+const PORT = process.env.PORT || 5000;
 
 // Body parser middleware for JSON payloads
 app.use(express.json());
