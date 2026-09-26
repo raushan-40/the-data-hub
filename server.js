@@ -1,9 +1,13 @@
+require('dotenv').config();
 const express = require('express');
+const connectDB = require('./config/db');
 const postsRouter = require('./routes/posts');
 
 const app = express();
-// Support hosting provider PORT while defaulting to 5000 locally
 const PORT = process.env.PORT || 5000;
+
+// Establish database connection
+connectDB();
 
 // Body parser middleware for JSON payloads
 app.use(express.json());
@@ -26,14 +30,12 @@ app.get('/', (req, res) => {
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
-  // Validation: username and password must both be present
   if (!username || !password) {
     return res.status(400).json({
       message: 'Username and password are required.'
     });
   }
 
-  // Demonstration credential validation (mock authentication)
   if (username === 'raushan' && password === 'test123') {
     return res.status(200).json({
       message: 'Login successful',
@@ -46,7 +48,7 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Mount resource routes
+// Resource routes (In-memory implementation preserved for Phase 1)
 app.use('/posts', postsRouter);
 
 // 404 handler for unknown routes
@@ -64,6 +66,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
