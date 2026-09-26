@@ -2,14 +2,15 @@ require('dotenv').config();
 const express = require('express');
 const connectDB = require('./config/db');
 const postsRouter = require('./routes/posts');
+const usersRouter = require('./routes/users');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Establish database connection
+// Connect to MongoDB Atlas
 connectDB();
 
-// Body parser middleware for JSON payloads
+// Body parser middleware
 app.use(express.json());
 
 // Custom request logging middleware
@@ -48,8 +49,9 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Resource routes (In-memory implementation preserved for Phase 1)
+// Resource routes
 app.use('/posts', postsRouter);
+app.use('/users', usersRouter);
 
 // 404 handler for unknown routes
 app.use((req, res) => {
