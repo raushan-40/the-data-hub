@@ -1,17 +1,18 @@
 # The Data Hub
 
 ## Overview
-**The Data Hub** is a RESTful API built with **Node.js**, **Express**, and **MongoDB Atlas** using **Mongoose** (Sprint 10 — Track B: Fullstack Developer). It features persistent CRUD operations, User-to-Post relationships with reference population, a custom recent posts query, request logging middleware, and demonstration mock authentication.
+**The Data Hub** is a production-ready RESTful API built with **Node.js**, **Express**, and **MongoDB Atlas** using **Mongoose** (Sprint 10 — Track B: Fullstack Developer). It features persistent cloud CRUD operations, User-to-Post relational data modeling with `.populate()`, database-level aggregation for recent posts, global request-logging middleware, and demonstration mock authentication.
 
 ---
 
 ## Features
-- **MongoDB Atlas Persistence**: Cloud-backed persistence via Mongoose schemas.
-- **Relational Data Modeling**: `Post` documents reference `User` documents via `author` ObjectId references.
-- **Payload Hydration (`populate()`)**: Automatically populates author information (`name`, `email`) on post retrieval.
-- **Top 3 Most Recent Posts**: Database-level sorting (`createdAt: -1`) and limiting (`limit(3)`).
-- **Request Logging Middleware**: Global logging of HTTP method, URL path, and timestamp.
+- **MongoDB Atlas Persistence**: Cloud database persistence replacing in-memory state.
+- **Relational Data Modeling**: Posts reference User documents via Mongoose `ObjectId` references (`ref: 'User'`).
+- **Relational Hydration (`populate()`)**: Automatically populates author information (`name`, `email`) on post retrieval.
+- **Top 3 Most Recent Posts**: Database-level sorting (`createdAt: -1`) and query limiting (`limit(3)`).
+- **Global Request Logging**: Intercepts all traffic and outputs HTTP method, path, and timestamp.
 - **Mock Authentication**: Demonstration `POST /login` returning a mock JWT token.
+- **Predictable Error Handling**: Robust JSON responses for `400 Bad Request`, `401 Unauthorized`, `404 Not Found`, and `500 Internal Server Error`.
 
 ---
 
@@ -27,7 +28,7 @@
 | Method | Endpoint | Description | Status Codes |
 |---|---|---|---|
 | `GET` | `/users` | List all users | `200 OK` |
-| `POST` | `/users` | Create user for relation testing | `201 Created`, `400 Bad Request` |
+| `POST` | `/users` | Create user for relational testing | `201 Created`, `400 Bad Request` |
 
 ### 3. Blog Posts Resource
 | Method | Endpoint | Description | Status Codes |
@@ -43,6 +44,8 @@
 
 ## Setup & Local Execution
 
-1. Clone the repository and install dependencies:
-   ```bash
-   npm install
+### 1. Clone & Install
+```bash
+git clone <repository-url>
+cd the-data-hub
+npm install
