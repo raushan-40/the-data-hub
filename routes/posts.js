@@ -1,95 +1,119 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
+const Post = require('../models/Post');
 
-// In-memory data store for blog posts
-let blogPosts = [];
-let nextId = 1;
-
-// GET /posts - Retrieve all posts
-router.get('/', (req, res) => {
-  res.status(200).json(blogPosts);
+// GET /posts - Retrieve all posts from MongoDB
+router.get('/', async (req, res, next) => {
+  try {
+    const posts = await Post.find();
+    res.status(200).json(posts);
+  } catch (error) {
+    next(error);
+  }
 });
 
-// GET /posts/:id - Retrieve a single post by ID
-router.get('/:id', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const post = blogPosts.find((p) => p.id === id);
+// GET /posts/:id - Retrieve a single post by MongoDB ObjectId
+router.get('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  if (!post) {
-    return res.status(404).json({
-      message: 'Post not found'
-    });
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid post ID format' });
+    }
+
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.status(200).json(post);
+  } catch (error) {
+    next(error);
   }
-
-  res.status(200).json(post);
 });
 
-// POST /posts - Create a new post
-router.post('/', (req, res) => {
-  const { title, body } = req.body;
+// POST /posts - Create a new post in MongoDB
+router.post('/', async (req, res, next) => {
+  try {
+    const { title, content } = req.body;
 
-  // Validation: both title and body are required non-empty strings
-  if (!title || typeof title !== 'string' || !title.trim() || !body || typeof body !== 'string' || !body.trim()) {
-    return res.status(400).json({
-      message: 'Title and body are required.'
+    // Validate input fields
+    if (!title || typeof title !== 'string' || !title.trim() || !content || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ message: 'Title and content are required.' });
+    }
+
+    const newPost = await Post.create({
+      title: title.trim(),
+      content: content.trim()
     });
+
+    res.status(201).json(newPost);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    next(error);
   }
-
-  const newPost = {
-    id: nextId++,
-    title: title.trim(),
-    body: body.trim(),
-    createdAt: new Date().toISOString()
-  };
-
-  blogPosts.push(newPost);
-  res.status(201).json(newPost);
 });
 
-// PUT /posts/:id - Update an existing post by ID
-router.put('/:id', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const postIndex = blogPosts.findIndex((p) => p.id === id);
+// PUT /posts/:id - Update an existing post in MongoDB
+router.put('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  if (postIndex === -1) {
-    return res.status(404).json({
-      message: 'Post not found'
-    });
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid post ID format' });
+    }
+
+    const { title, content } = req.body;
+
+    // Validate input fields
+    if (!title || typeof title !== 'string' || !title.trim() || !content || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ message: 'Title and content are required.' });
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      id,
+      { title: title.trim(), content: content.trim() },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedPost) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    next(error);
   }
-
-  const { title, body } = req.body;
-
-  // Validation: both title and body are required non-empty strings
-  if (!title || typeof title !== 'string' || !title.trim() || !body || typeof body !== 'string' || !body.trim()) {
-    return res.status(400).json({
-      message: 'Title and body are required.'
-    });
-  }
-
-  blogPosts[postIndex] = {
-    ...blogPosts[postIndex],
-    title: title.trim(),
-    body: body.trim()
-  };
-
-  res.status(200).json(blogPosts[postIndex]);
 });
 
-// DELETE /posts/:id - Delete a post by ID
-router.delete('/:id', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const postIndex = blogPosts.findIndex((p) => p.id === id);
+// DELETE /posts/:id - Remove a post from MongoDB
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  if (postIndex === -1) {
-    return res.status(404).json({
-      message: 'Post not found'
-    });
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid post ID format' });
+    }
+
+    const deletedPost = await Post.findByIdAndDelete(id);
+
+    if (!deletedPost) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.status(200).json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    next(error);
   }
-
-  blogPosts.splice(postIndex, 1);
-  res.status(200).json({
-    message: 'Post deleted successfully'
-  });
 });
 
 module.exports = router;
