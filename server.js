@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const postsRouter = require('./routes/posts');
 const usersRouter = require('./routes/users');
+const uploadsRouter = require('./routes/uploads'); // 👈 Import uploads router
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,7 +12,7 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB Atlas
 connectDB();
 
-// CORS Middleware (Configured for local Vite frontend)
+// CORS Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
@@ -59,6 +60,7 @@ app.post('/login', (req, res) => {
 // Resource routes
 app.use('/posts', postsRouter);
 app.use('/users', usersRouter);
+app.use('/uploads', uploadsRouter); // 👈 Mount uploads router
 
 // 404 handler for unknown routes
 app.use((req, res) => {
