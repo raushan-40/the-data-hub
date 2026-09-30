@@ -56,3 +56,21 @@ Integrate the Multer memory storage and Cloudinary upload pipeline into the prim
 - Tested `POST /posts` with JSON body (no image) → Created post with `imageUrl: null` (201 Created).
 - Tested `POST /posts` with `multipart/form-data` (title + content + `image` file) → Image uploaded to Cloudinary, returned document with live `imageUrl` (201 Created).
 - Tested `GET /posts` and `GET /posts/recent` → Returned posts with populated author and `imageUrl`.
+
+
+---
+
+### Update `the-data-hub/Prompts.md`
+Append to `Prompts.md`:
+
+```markdown
+# Sprint 11 — Final Production Audit & Deployment Preparation
+
+## Objective
+Audit the entire fullstack system across both repositories (`Cine-Stream` frontend and `the-data-hub` backend) to verify production readiness, environment variable security, dynamic port and CORS configurations, and build viability.
+
+## Audit Results
+1. **Frontend**: Confirmed `src/services/api.js` uses `import.meta.env.VITE_API_URL`. Verified `npm run build` completes successfully with zero errors.
+2. **Backend**: Confirmed `server.js` binds to `process.env.PORT || 5000`. Updated CORS to support `CLIENT_URL` for Vercel.
+3. **Security**: Confirmed zero secrets or Cloudinary keys are exposed to the frontend client. MongoDB stores only the secure Cloudinary HTTPS URL.
+4. **Deployment Strategy**: Frontend mapped to Vercel, Backend mapped to Render.

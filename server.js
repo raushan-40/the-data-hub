@@ -4,7 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const postsRouter = require('./routes/posts');
 const usersRouter = require('./routes/users');
-const uploadsRouter = require('./routes/uploads'); // 👈 Import uploads router
+const uploadsRouter = require('./routes/uploads');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,9 +12,20 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB Atlas
 connectDB();
 
-// CORS Middleware
+// CORS Configuration for Local & Production (Vercel)
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.CLIENT_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like Postman, mobile apps, or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS blocked: Origin not allowed'));
+  },
   credentials: true
 }));
 
@@ -60,7 +71,7 @@ app.post('/login', (req, res) => {
 // Resource routes
 app.use('/posts', postsRouter);
 app.use('/users', usersRouter);
-app.use('/uploads', uploadsRouter); // 👈 Mount uploads router
+app.use('/uploads', uploadsRouter);
 
 // 404 handler for unknown routes
 app.use((req, res) => {
@@ -72,7 +83,7 @@ app.use((req, res) => {
 // Fallback error handler
 app.use((err, req, res, next) => {
   res.status(500).json({
-    message: 'Internal Server Error'
+    message: err.message || 'Internal Server Error'
   });
 });
 
