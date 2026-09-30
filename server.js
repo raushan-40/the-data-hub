@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const connectDB = require('./config/db');
 const postsRouter = require('./routes/posts');
 const usersRouter = require('./routes/users');
@@ -9,6 +10,12 @@ const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB Atlas
 connectDB();
+
+// CORS Middleware (Configured for local Vite frontend)
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true
+}));
 
 // Body parser middleware
 app.use(express.json());
