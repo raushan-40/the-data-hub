@@ -12,22 +12,7 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB Atlas
 connectDB();
 
-// CORS Configuration for Local & Production (Vercel)
-const allowedOrigins = [
-  'http://localhost:5173',
-  process.env.CLIENT_URL
-].filter(Boolean);
-
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like Postman, mobile apps, or curl)
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('CORS blocked: Origin not allowed'));
-  },
-  credentials: true
-}));
+app.use(cors());
 
 // Body parser middleware
 app.use(express.json());
