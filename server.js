@@ -32,24 +32,69 @@ const io = new Server(server, {
   }
 });
 
-// Socket connection & real-time messaging handler
+// Allowed channel rooms
+const ALLOWED_CHANNELS = ['General', 'Tech Support'];
+
+// Socket connection & room routing handlers
 io.on('connection', (socket) => {
   console.log(`Socket client connected: ${socket.id}`);
 
-  // Listen for incoming chat messages
-  socket.on('chat:message', (payload) => {
-    // Validate payload to prevent empty or malformed data
-    if (!payload || typeof payload.text !== 'string' || !payload.text.trim()) {
+  // 1. Channel Join Handler
+  socket.on('channel:join', (channelName) => {
+    if (!ALLOWED_CHANNELS.includes(channelName)) {
       return;
     }
 
+    // Leave any previously joined channel rooms
+    ALLOWED_CHANNELS.forEach((ch) => {
+      socket.leave(ch);
+    });
+
+    // Join the requested room
+    socket.join(channelName);
+    socket.currentChannel = channelName;
+  });
+
+  // 2. Channel-Scoped Chat Message Handler
+  socket.on('chat:message', (payload) => {
+    if (
+      !payload ||
+      !ALLOWED_CHANNELS.includes(payload.channel) ||
+      typeof payload.text !== 'string' ||
+      !payload.text.trim()
+    ) {
+      return;
+    }
+
+    const userName = (typeof payload.user === 'string' && payload.user.trim())
+      ? payload.user.trim()
+      : 'Anonymous';
+
     const messageData = {
       id: `${Date.now()}-${socket.id}`,
+      channel: payload.channel,
+      user: userName,
       text: payload.text.trim()
     };
 
-    // Broadcast message to ALL connected clients
-    io.emit('chat:message', messageData);
+    // Emit ONLY to clients in the specified channel room
+    io.to(payload.channel).emit('chat:message', messageData);
+  });
+
+  // 3. Channel-Scoped Real-Time Typing Indicator Handler
+  socket.on('user:typing', (payload) => {
+    if (!payload || !ALLOWED_CHANNELS.includes(payload.channel) || typeof payload.user !== 'string') {
+      return;
+    }
+
+    const typingData = {
+      channel: payload.channel,
+      user: payload.user.trim() || 'Anonymous',
+      isTyping: Boolean(payload.isTyping)
+    };
+
+    // Broadcast typing state ONLY to other clients in the same channel room
+    socket.to(payload.channel).emit('user:typing', typingData);
   });
 
   socket.on('disconnect', () => {
@@ -115,7 +160,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start HTTP server (Express + Socket.io share this server)
+// Start HTTP server
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

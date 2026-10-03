@@ -115,3 +115,51 @@ Implement bidirectional broadcast messaging over Socket.io by listening to `chat
 - Handled `socket.on('chat:message')` validating `payload.text`.
 - Broadcasted message payloads via `io.emit('chat:message', { id, text })`.
 - Preserved existing MongoDB persistence, Cloudinary upload, and REST endpoints.
+
+
+# Sprint 12 — Track B — Phase 2A: Session Identification
+
+## Prompt
+Sprint 12 — Track B — Phase 2A
+Session Identification
+[Attached full system prompt specification]
+
+## Objective
+Implement session identity handling on the Socket.io backend, validating incoming `{ user, text }` payloads and broadcasting the identity to all connected clients.
+
+## Implementation Details
+- Sanitized `payload.user` to prevent empty identities.
+- Broadcasted `{ id, user, text }` via `io.emit('chat:message', messageData)`.
+- Maintained all existing REST, Cloudinary, and MongoDB functionality.
+
+# Sprint 12 — Track B — Phase 2B: Real-Time Event Handlers: Typing Indicator
+
+## Prompt
+Sprint 12 — Track B — Phase 2B
+Real-Time Event Handlers: Typing Indicator
+[Attached full system prompt specification]
+
+## Objective
+Implement a lightweight real-time typing indicator handler on the Socket.io backend using `socket.broadcast.emit('user:typing', payload)`.
+
+## Implementation Details
+- Handled `socket.on('user:typing')` validating `{ user, isTyping }`.
+- Broadcasted typing events to all other connected sockets without flooding server console logs.
+- Maintained all existing REST, Cloudinary, and MongoDB functionality.
+
+# Sprint 12 — Track B — Phase 3: Channel Segregation & Routing Logic
+
+## Prompt
+Sprint 12 — Track B — Phase 3
+Channel Segregation & Routing Logic
+[Attached full system prompt specification]
+
+## Objective
+Implement room-based channel routing over Socket.io using `socket.join()` and `socket.leave()` for `General` and `Tech Support` channels, isolating chat messages via `io.to(channel).emit()` and typing indicators via `socket.to(channel).emit()`.
+
+## Implementation Details
+- Defined `ALLOWED_CHANNELS = ['General', 'Tech Support']`.
+- Handled `channel:join` leaving previous channel rooms and joining the requested room.
+- Scoped message broadcasts to `io.to(payload.channel).emit('chat:message', messageData)`.
+- Scoped typing indicators to `socket.to(payload.channel).emit('user:typing', typingData)`.
+- Maintained all existing REST, Cloudinary, and MongoDB functionality.
