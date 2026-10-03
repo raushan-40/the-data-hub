@@ -1,6 +1,8 @@
 require('dotenv').config();
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
+const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 const postsRouter = require('./routes/posts');
 const usersRouter = require('./routes/users');
@@ -9,10 +11,51 @@ const uploadsRouter = require('./routes/uploads');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Create HTTP server wrapping Express
+const server = http.createServer(app);
+
 // Connect to MongoDB Atlas
 connectDB();
 
-app.use(cors());
+// CORS Middleware for Express HTTP routes
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
+// Initialize Socket.io attached to the HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
+// Socket connection & real-time messaging handler
+io.on('connection', (socket) => {
+  console.log(`Socket client connected: ${socket.id}`);
+
+  // Listen for incoming chat messages
+  socket.on('chat:message', (payload) => {
+    // Validate payload to prevent empty or malformed data
+    if (!payload || typeof payload.text !== 'string' || !payload.text.trim()) {
+      return;
+    }
+
+    const messageData = {
+      id: `${Date.now()}-${socket.id}`,
+      text: payload.text.trim()
+    };
+
+    // Broadcast message to ALL connected clients
+    io.emit('chat:message', messageData);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`Socket client disconnected: ${socket.id}`);
+  });
+});
 
 // Body parser middleware
 app.use(express.json());
@@ -72,7 +115,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
+// Start HTTP server (Express + Socket.io share this server)
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

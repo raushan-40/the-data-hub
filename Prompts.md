@@ -74,3 +74,44 @@ Audit the entire fullstack system across both repositories (`Cine-Stream` fronte
 2. **Backend**: Confirmed `server.js` binds to `process.env.PORT || 5000`. Updated CORS to support `CLIENT_URL` for Vercel.
 3. **Security**: Confirmed zero secrets or Cloudinary keys are exposed to the frontend client. MongoDB stores only the secure Cloudinary HTTPS URL.
 4. **Deployment Strategy**: Frontend mapped to Vercel, Backend mapped to Render.
+
+
+# Sprint 12 — Track B — Phase 1A: WebSocket Initialization & Base MVP: Backend Foundation
+
+## Prompt
+Sprint 12 — Track B — Phase 1A
+WebSocket Initialization & Base MVP: Backend Foundation
+[Attached full system prompt specification]
+
+## Objective
+Establish the Socket.io WebSocket server foundation within the existing Express application using a unified Node.js HTTP server without breaking existing REST API endpoints, Cloudinary integration, or MongoDB connection.
+
+## Architecture & Implementation
+- **HTTP Server**: Wrapped the Express `app` in `http.createServer(app)`.
+- **Socket.io Initialization**: Attached `new Server(server, { cors: { origin: allowedOrigins } })` to share port `5000` / `process.env.PORT`.
+- **Connection Lifecycle**: Added `io.on('connection', (socket) => { ... })` and `socket.on('disconnect')` to log client connect/disconnect events with `socket.id`.
+- **Server Startup**: Updated entry point to listen via `server.listen(PORT)`.
+
+## Testing & Verification
+- Started backend via `npm start`.
+- Verified console displays:
+  - `MongoDB connected successfully`
+  - `Server is running on port 5000`
+- Verified REST endpoints (`GET /`, `GET /posts`, `POST /login`) continue to respond with `200 OK`.
+- Verified Socket.io engine endpoint responds at `http://localhost:5000/socket.io/?EIO=4&transport=polling`.
+
+
+# Sprint 12 — Track B — Phase 1C: Bidirectional Broadcast: Real-Time Messaging MVP
+
+## Prompt
+Sprint 12 — Track B — Phase 1C
+Bidirectional Broadcast: Real-Time Messaging MVP
+[Attached full system prompt specification]
+
+## Objective
+Implement bidirectional broadcast messaging over Socket.io by listening to `chat:message` events, validating the payload, and broadcasting `chat:message` to all connected clients.
+
+## Implementation Details
+- Handled `socket.on('chat:message')` validating `payload.text`.
+- Broadcasted message payloads via `io.emit('chat:message', { id, text })`.
+- Preserved existing MongoDB persistence, Cloudinary upload, and REST endpoints.
